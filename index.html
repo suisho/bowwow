@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World!</title>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <div>voice</div>
+    <canvas id="test"></canvas>
+  </body>
+  <script>
+  function drawToCanvas(average){
+    var canvasContext = document.querySelector("#test");
+    var canvasContext = canvasContext.getContext("2d");
+    
+    canvasContext.clearRect(0, 0, 300, 130);
+    canvasContext.fillStyle = '#00ff00';
+    canvasContext.fillRect(0,130-average,300,130);
+    
+  }
+  window.navigator.webkitGetUserMedia({ video: false, audio: true}, function(stream) {
+    
+    var audioContext = new webkitAudioContext();
+    var analyser = audioContext.createAnalyser();
+    var microphone = audioContext.createMediaStreamSource(stream);
+    var javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+    
+    analyser.smoothingTimeConstant = 0.3;
+    analyser.fftSize = 1024;
+    
+    microphone.connect(analyser);
+    analyser.connect(javascriptNode);
+    javascriptNode.connect(audioContext.destination);
+    
+    javascriptNode.onaudioprocess = function() {
+      var array =  new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(array);
+      var values = 0;
+      
+      var length = array.length;
+      for (var i = 0; i < length; i++) {
+        values += array[i];
+      }
+      
+      var average = values / length;
+      drawToCanvas(average)
+    }      
+  }, function(err) {
+    console.log("An error occured! " + err);
+  });      
+  </script>
+</html>
