@@ -68,7 +68,6 @@
       function success(stream){
         handleAudioProgress(stream, function(array){
           self.$data.freq = array
-          self.paths
         })
       }
       navigator.webkitGetUserMedia({ video: false, audio: true}, success, error)
