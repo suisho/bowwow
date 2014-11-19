@@ -4,13 +4,15 @@
   "description": "Check mic volume",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "start" : "/Applications/Atom-Shell.app/Contents/MacOS/Atom ./index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "autorecordmic": "^0.3.3",
     "jsynth-mic": "^0.4.0",
-    "microphone": "^1.0.5"
+    "microphone": "^1.0.5",
+    "vue": "^0.11.0"
   }
 }
