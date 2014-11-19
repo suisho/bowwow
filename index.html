@@ -8,7 +8,7 @@
     <div>voice</div>
     <div id="app">
       <svg v-attr="width: width, height : height, viewBox: viewBox">
-        <path stroke="black" width=1 fill="transparent" v-attr="d:points"></path>
+        <path stroke="black" width=1 fill="transparent" v-attr="d:paths"></path>
       </svg>
     </div>
   </body>
@@ -30,23 +30,37 @@
       width :100,
       height :100
     },
+    methods: {
+      normalizeValue : function(x, y, maxX, maxY){
+        var normX = x * this.$data.width / maxX
+        var normY = -y * this.$data.height / maxY
+        return [normX, normY]
+      },
+      toPoints : function(){
+        var pts = []
+        var length =  this.$data.stream.length
+        for(var i=0; i < length; i+=10){
+          var value = this.$data.stream[i]
+          var pt = this.normalizeValue(i, value, length ,255)
+          pts.push(pt)
+        }
+        return pts 
+      }
+    },
     computed : {
       viewBox : function(){
         return [0, -this.$data.height, this.$data.width, this.$data.height].join(" ")
       },
-      points : function(){
-        var pts = []
-        var length =  this.$data.stream.length
-        for(var i=0; i < length; i++){
-          var value = this.$data.stream[i]
-          var x = this.$data.width / length * i
-          var y = -value * this.$data.height / 255
-          pts.push(x + "," + y)
-        }
+      paths : function(){
+        var pts = this.toPoints()
         if(pts.length == 0){
           return ""
         }
-        return "M"+pts.join(" ")
+        var paths = pts.map(function(m){
+          return m.join(",")
+        }).join(" ")
+        
+        return "M" + paths
       }
     },
     created : function(){
@@ -54,6 +68,7 @@
       function success(stream){
         handleAudioProgress(stream, function(array){
           self.$data.stream = array
+          self.paths
         })
       }
       navigator.webkitGetUserMedia({ video: false, audio: true}, success, error)
@@ -61,26 +76,15 @@
     }
   })
   vm.$mount("#app")
-  /*
-  function drawToCanvas(average){
-    return 
-    var canvasContext =  document.querySelector("#test").getContext("2d");
-    
-    canvasContext.clearRect(0, 0, 300, 130);
-    canvasContext.fillStyle = '#00ff00';
-    canvasContext.fillRect(0,130-average,300,130);
-  }
-  */
+  
   var audioContext = new webkitAudioContext();
   var analyser = audioContext.createAnalyser();
   var javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+  analyser.smoothingTimeConstant = 0.3;
+  analyser.fftSize = 1024;
   
   function handleAudioProgress(stream, onAudioProgress){
-    var microphone = audioContext.createMediaStreamSource(stream);
-    
-    analyser.smoothingTimeConstant = 0.3;
-    analyser.fftSize = 1024;
-    
+    var microphone = audioContext.createMediaStreamSource(stream);  
     microphone.connect(analyser);
     analyser.connect(javascriptNode);
     javascriptNode.connect(audioContext.destination);
@@ -88,12 +92,10 @@
       var array =  new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(array);
       onAudioProgress(array)
-      //var average = uintToAverage(array)
-      //drawToCanvas(average)
     } 
   }
   function error(err){
-    console.log("An error occured! " + err);
+    //console.log("An error occured! " + err);
   }
   </script>
 </html>
