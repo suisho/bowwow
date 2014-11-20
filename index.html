@@ -7,10 +7,13 @@
     <h1>Hello World!</h1>
     <div>voice</div>
     <div id="app">
+      <div v-ref="freqGraph" v-with="points: freqPoints" v-component="graph"></div>
+    </div>
+    <template id="graph">
       <svg v-attr="width: width, height : height, viewBox: viewBox">
         <path stroke="black" width=1 fill="transparent" v-attr="d:paths"></path>
       </svg>
-    </div>
+    </template>
   </body>
   <script>
   function uintToAverage(array){
@@ -23,24 +26,50 @@
   }
   
   var Vue = require("vue")
+  Vue.component("graph", {
+    template : "#graph",
+    
+    data : function(){
+      return {
+        width : 100,
+        height : 100,
+      }
+    },
+    computed: {
+      viewBox : function(){
+        return [0, -this.$data.height, this.$data.width, this.$data.height].join(" ")
+      },
+      paths : function(){
+        var pts = this.$data.points
+        if(pts.length == 0){
+          return ""
+        }
+        var paths = pts.map(function(m){
+          var x = this.$data.width * m[0]
+          var y = -this.$data.height * m[1]
+          return m.join(x+","+y)
+        }).join(" ")
+        
+        return "M" + paths
+      }
+    }
+  })
   var vm = new Vue({
     data : {
-      volumes: [],
+      times: [],
       freq: [],
-      width :100,
-      height :100
     },
     methods: {
       normalizeValue : function(x, y, maxX, maxY){
-        var normX = x * this.$data.width / maxX
-        var normY = -y * this.$data.height / maxY
+        var normX = x  / maxX
+        var normY = y / maxY
         return [normX, normY]
       },
-      toPoints : function(){
+      toPoints : function(byteArray){
         var pts = []
-        var length =  this.$data.freq.length
+        var length =  byteArray.length
         for(var i=0; i < length; i+=10){
-          var value = this.$data.freq[i]
+          var value = byteArray[i]
           var pt = this.normalizeValue(i, value, length ,255)
           pts.push(pt)
         }
@@ -48,26 +77,17 @@
       }
     },
     computed : {
-      viewBox : function(){
-        return [0, -this.$data.height, this.$data.width, this.$data.height].join(" ")
-      },
-      paths : function(){
-        var pts = this.toPoints()
-        if(pts.length == 0){
-          return ""
-        }
-        var paths = pts.map(function(m){
-          return m.join(",")
-        }).join(" ")
-        
-        return "M" + paths
+      freqPoints : function(){
+        return this.toPoints(this.$data.freq)
       }
     },
     created : function(){
       var self = this
       function success(stream){
-        handleAudioProgress(stream, function(array){
-          self.$data.freq = array
+        handleAudioProgress(stream, function(freq, times){
+          self.$data.freq = freq
+          self.$data.times = times
+          
         })
       }
       navigator.webkitGetUserMedia({ video: false, audio: true}, success, error)
@@ -88,9 +108,11 @@
     analyser.connect(javascriptNode);
     javascriptNode.connect(audioContext.destination);
     javascriptNode.onaudioprocess = function() {
-      var array =  new Uint8Array(analyser.frequencyBinCount);
-      analyser.getByteFrequencyData(array);
-      onAudioProgress(array)
+      var freq =  new Uint8Array(analyser.frequencyBinCount)
+      var times = new Uint8Array(analyser.fftSize)
+      analyser.getByteFrequencyData(freq)
+      analyser.getByteTimeDomainData(times)
+      onAudioProgress(freq, times)
     } 
   }
   function error(err){
