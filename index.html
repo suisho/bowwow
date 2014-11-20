@@ -7,7 +7,9 @@
     <h1>Hello World!</h1>
     <div>voice</div>
     <div id="app">
-      <div v-ref="freqGraph" v-with="points: freqPoints" v-component="graph"></div>
+      <div v-with="points: freqPoints" v-component="graph"></div>
+      <div v-with="points: timesPoints" v-component="graph"></div>
+      
     </div>
     <template id="graph">
       <svg v-attr="width: width, height : height, viewBox: viewBox">
@@ -40,16 +42,17 @@
         return [0, -this.$data.height, this.$data.width, this.$data.height].join(" ")
       },
       paths : function(){
-        var pts = this.$data.points
-        if(pts.length == 0){
+        var self = this
+        var pts = this.points
+        
+        if(pts.length === 0){
           return ""
         }
         var paths = pts.map(function(m){
-          var x = this.$data.width * m[0]
-          var y = -this.$data.height * m[1]
-          return m.join(x+","+y)
+          var x = self.$data.width * m[0]
+          var y = -self.$data.height * m[1]
+          return x + "," + y
         }).join(" ")
-        
         return "M" + paths
       }
     }
@@ -61,7 +64,7 @@
     },
     methods: {
       normalizeValue : function(x, y, maxX, maxY){
-        var normX = x  / maxX
+        var normX = x / maxX
         var normY = y / maxY
         return [normX, normY]
       },
@@ -78,7 +81,10 @@
     },
     computed : {
       freqPoints : function(){
-        return this.toPoints(this.$data.freq)
+        return this.toPoints(this.freq)
+      },
+      timesPoints : function(){
+        return this.toPoints(this.times)
       }
     },
     created : function(){
@@ -87,6 +93,8 @@
         handleAudioProgress(stream, function(freq, times){
           self.$data.freq = freq
           self.$data.times = times
+          //self.$.freqGraph.points
+          
           
         })
       }
