@@ -11,6 +11,7 @@
       <div v-with="points: timesPoints" v-component="graph"></div>
       <div>
         <button v-on="click: capture">capture</button>
+        <canvas v-el="videoCanvas"></canvas>
         <video v-el="video"></video>
       </div>
     </div>
@@ -89,6 +90,10 @@
         var video = this.$$.video
         video.src = window.URL.createObjectURL(stream)
         video.play()
+
+        var ctx = this.$$.videoCanvas.getContext("2d")
+        ctx.drawImage(video, 0, 0)
+        
       },
       handleAudioProgress: function(stream, onAudioProgress){
         this._handleAudioProgress(this.$data.audioContext, this.$data.javascriptNode, stream, onAudioProgress)
