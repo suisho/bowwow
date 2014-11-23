@@ -11,8 +11,9 @@
       <div v-with="points: timesPoints" v-component="graph"></div>
       <div>
         <button v-on="click: capture">capture</button>
-        <canvas v-el="videoCanvas"></canvas>
+        <img v-attr="src: videoDiff">
         <video v-el="video"></video>
+        <canvas v-el="videoCanvas"></canvas>
       </div>
     </div>
     <template id="graph">
@@ -32,6 +33,7 @@
   }
   
   var Vue = require("vue")
+  var resemble = require("resemblejs").resemble
   Vue.component("graph", {
     template : "#graph",  
     data : function(){
@@ -64,6 +66,7 @@
     data : {
       times: [],
       freq: [],
+      videoDiff: null
     },
     methods: {
       normalizeValue : function(x, y, maxX, maxY){
@@ -89,11 +92,7 @@
         })
         var video = this.$$.video
         video.src = window.URL.createObjectURL(stream)
-        video.play()
-
-        var ctx = this.$$.videoCanvas.getContext("2d")
-        ctx.drawImage(video, 0, 0)
-        
+        //video.play()
       },
       handleAudioProgress: function(stream, onAudioProgress){
         this._handleAudioProgress(this.$data.audioContext, this.$data.javascriptNode, stream, onAudioProgress)
@@ -101,7 +100,7 @@
       _handleAudioProgress: function(audioContext, javascriptNode, stream, onAudioProgress){
         var microphone = audioContext.createMediaStreamSource(stream);  
         var analyser = audioContext.createAnalyser();
-        analyser.smoothingTimeConstant = 0.6;
+        analyser.smoothingTimeConstant = 0.3;
         analyser.fftSize = 1024;
         microphone.connect(analyser);
         
@@ -115,8 +114,30 @@
           onAudioProgress(freq, times)
         }
       },
+      captureCurrentVideo : function(){
+        var type = "image/png"
+        var dataUrl = this.$$.videoCanvas.toDataURL(type)
+        return dataUrl
+      },
+      renderVideoCanvas : function(){
+        var video = this.$$.video
+        var videoAspect = video.clientHeight / video.clientWidth 
+        var ctxWidth = 320
+        
+        var ctx = this.$$.videoCanvas.getContext("2d")
+        ctx.drawImage(video, 0, 0, ctxWidth ,  ctxWidth / videoAspect)
+      },
       capture : function(){
-        console.log("capture")
+        var oldData = this.captureCurrentVideo()
+        this.renderVideoCanvas()
+        var newData = this.captureCurrentVideo()
+        var diff = resemble(oldData).compareTo(newData)
+        var self = this
+        diff.ignoreColors().onComplete(function(data){
+          //console.log(data.getImageDataUrl())
+          self.$data.videoDiff = data.getImageDataUrl()
+        })
+        
       }
     },
     computed : {
