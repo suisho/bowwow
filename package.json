@@ -11,7 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "autorecordmic": "^0.3.3",
+    "firebase": "^2.0.5",
     "jsynth-mic": "^0.4.0",
+    "mercury": "^10.0.1",
     "microphone": "^1.0.5",
     "resemblejs": "^1.2.0",
     "vue": "^0.11.0",

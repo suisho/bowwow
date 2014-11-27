@@ -4,12 +4,17 @@
     <title>Hello World!</title>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    <div>voice</div>
+    <h1>Bowwow</h1>
     <div id="app">
-      <div v-with="points: freqPoints" v-component="graph"></div>
-      <div v-with="points: timesPoints" v-component="graph"></div>
+      <h2>voice</h2>
       <div>
+        <div v-with="points: freqPoints" v-component="graph"></div>
+        <div v-with="points: timesPoints" v-component="graph"></div>
+      </div>
+      <h2>video</h2>
+      <div>
+        <div v-with="points: videoDiffPoints" v-component="graph"></div>
+        
         <button v-on="click: capture">capture</button>
         <img v-attr="src: videoDiff">
         <video v-el="video"></video>
@@ -34,6 +39,7 @@
   
   var Vue = require("vue")
   var resemble = require("resemblejs").resemble
+  
   Vue.component("graph", {
     template : "#graph",  
     data : function(){
@@ -53,7 +59,11 @@
         if(pts.length === 0){
           return ""
         }
-        var paths = pts.map(function(m){
+        
+        var paths = pts.map(function(m, i){
+          if(typeof m === "number"){
+            m = [i / self.$data.width, m]
+          }
           var x = self.$data.width * m[0]
           var y = -self.$data.height * m[1]
           return x + "," + y
@@ -66,6 +76,7 @@
     data : {
       times: [],
       freq: [],
+      videoDiffPoints : [],
       videoDiff: null
     },
     methods: {
@@ -92,7 +103,8 @@
         })
         var video = this.$$.video
         video.src = window.URL.createObjectURL(stream)
-        //video.play()
+        video.volume = 0
+        video.play()
       },
       handleAudioProgress: function(stream, onAudioProgress){
         this._handleAudioProgress(this.$data.audioContext, this.$data.javascriptNode, stream, onAudioProgress)
@@ -123,9 +135,10 @@
         var video = this.$$.video
         var videoAspect = video.clientHeight / video.clientWidth 
         var ctxWidth = 320
+        var ctxHeight = ctxWidth / videoAspect
         
         var ctx = this.$$.videoCanvas.getContext("2d")
-        ctx.drawImage(video, 0, 0, ctxWidth ,  ctxWidth / videoAspect)
+        ctx.drawImage(video, 0, 0, ctxWidth , ctxHeight)// ,0, 0 ,ctxWidth , ctxHeight)
       },
       capture : function(){
         var oldData = this.captureCurrentVideo()
@@ -136,7 +149,9 @@
         diff.ignoreColors().onComplete(function(data){
           //console.log(data.getImageDataUrl())
           self.$data.videoDiff = data.getImageDataUrl()
+          self.$data.videoDiffPoints.unshift(Number(data.misMatchPercentage)/100)
         })
+        
         
       }
     },
@@ -155,10 +170,15 @@
       this.$data.javascriptNode = this.$data.audioContext.createScriptProcessor(2048, 1, 1);
       
       navigator.webkitGetUserMedia({ video: true, audio: true}, this.onUserMediaSuccess, error)
+      
     }
+    
   })
   vm.$mount("#app")
-  
+  // TODO:調整可能にする
+  setInterval(function(){
+    vm.capture()
+  }, 1000)
   function error(err){
     //console.log("An error occured! " + err);
   }
