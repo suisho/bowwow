@@ -61,9 +61,6 @@
         }
         
         var paths = pts.map(function(m, i){
-          if(typeof m === "number"){
-            m = [i / self.$data.width, m]
-          }
           var x = self.$data.width * m[0]
           var y = -self.$data.height * m[1]
           return x + "," + y
@@ -76,7 +73,7 @@
     data : {
       times: [],
       freq: [],
-      videoDiffPoints : [],
+      videoDiffStack: [],
       videoDiff: null
     },
     methods: {
@@ -149,10 +146,21 @@
         diff.ignoreColors().onComplete(function(data){
           //console.log(data.getImageDataUrl())
           self.$data.videoDiff = data.getImageDataUrl()
-          self.$data.videoDiffPoints.unshift(Number(data.misMatchPercentage)/100)
+          if(typeof m === "number"){
+            m = [i / self.$data.width, m]
+          }
+          
+          self.pushDiffPoint(Number(data.misMatchPercentage))
         })
         
         
+      },
+      pushDiffPoint : function(newValue){
+        if(this.$data.videoDiffStack.length > 100){
+          this.$data.videoDiffStack.shift()
+        }
+        this.$data.videoDiffStack.push(newValue)        
+        this.videoDiffPoints
       }
     },
     computed : {
@@ -161,6 +169,13 @@
       },
       timesPoints : function(){
         return this.toPoints(this.times)
+      },
+      videoDiffPoints : function(){
+        var len = this.$data.videoDiffStack.length
+        var pts = this.$data.videoDiffStack.map(function(data, i){
+          return [i/len, data/100]
+        })
+        return pts
       }
     },
     created : function(){
