@@ -21,11 +21,6 @@
         <canvas v-el="videoCanvas"></canvas>
       </div>
     </div>
-    <template id="graph">
-      <svg v-attr="width: width, height : height, viewBox: viewBox">
-        <path stroke="black" width=1 fill="transparent" v-attr="d:paths"></path>
-      </svg>
-    </template>
   </body>
   <script>
   function uintToAverage(array){
@@ -39,36 +34,9 @@
   
   var Vue = require("vue")
   var resemble = require("resemblejs").resemble
+  var vq =  require("./vue-graph")
   
-  Vue.component("graph", {
-    template : "#graph",  
-    data : function(){
-      return {
-        width : 100,
-        height : 100,
-      }
-    },
-    computed: {
-      viewBox : function(){
-        return [0, -this.$data.height, this.$data.width, this.$data.height].join(" ")
-      },
-      paths : function(){
-        var self = this
-        var pts = this.points
-        
-        if(pts.length === 0){
-          return ""
-        }
-        
-        var paths = pts.map(function(m, i){
-          var x = self.$data.width * m[0]
-          var y = -self.$data.height * m[1]
-          return x + "," + y
-        }).join(" ")
-        return "M" + paths
-      }
-    }
-  })
+  Vue.component("graph", require("./vue-graph")())
   var vm = new Vue({
     data : {
       times: [],
@@ -132,10 +100,15 @@
         var video = this.$$.video
         var videoAspect = video.clientHeight / video.clientWidth 
         var ctxWidth = 320
-        var ctxHeight = ctxWidth / videoAspect
+        var ctxHeight = ctxWidth * videoAspect
+        console.log(video.clientWidth, video.clientHeight,  ctxWidth , ctxHeight)
+        this.$$.videoCanvas.width = ctxWidth
+        this.$$.videoCanvas.height = ctxHeight
         
         var ctx = this.$$.videoCanvas.getContext("2d")
-        ctx.drawImage(video, 0, 0, ctxWidth , ctxHeight)// ,0, 0 ,ctxWidth , ctxHeight)
+        
+        ctx.drawImage(video, 0, 0, video.clientWidth, video.clientHeight, 
+                             0, 0, ctxWidth , ctxHeight)// ,0, 0 ,ctxWidth , ctxHeight)
       },
       capture : function(){
         var oldData = this.captureCurrentVideo()
