@@ -8,7 +8,7 @@ module.exports = function(grunt) {
       }
     },
     zip : {
-      'release.zip' : 'build'
+      'release.zip' : 'build/*'
     },
   })
   grunt.loadNpmTasks('grunt-atom-shell-app-builder')
