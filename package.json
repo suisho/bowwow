@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "start": "/Applications/Atom-Shell.app/Contents/MacOS/Atom ./index.js"
+    "start": "/Applications/Atom-Shell.app/Contents/MacOS/Atom ./app/index.js"
   },
   "author": "",
   "license": "ISC",
