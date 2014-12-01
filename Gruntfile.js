@@ -7,8 +7,10 @@ module.exports = function(grunt) {
         platforms: ["darwin", "win32"]
       }
     },
+    
     zip : {
-      'release.zip' : 'build/*'
+    //  'win.zip' : 'build/win32/**/*',
+    //  'darwin.zip' : 'build/darwin/**/*',
     },
   })
   grunt.loadNpmTasks('grunt-atom-shell-app-builder')
