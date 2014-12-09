@@ -24,7 +24,7 @@
         
         <button v-on="click: capture">capture</button>
         <img v-attr="src: videoDiffImage">
-        <video v-el="video"></video>
+        <video v-el="video" v-on="loadeddata:fitCanvasSize"></video>
         <canvas v-el="videoCanvas" style="display:none"></canvas>
         </div>        
       </section>
@@ -73,7 +73,7 @@
         var video = this.$$.video
         video.src = window.URL.createObjectURL(stream)
         video.volume = 0
-        video.play()        
+        video.play()  
       },
       handleAudioProgress: function(stream, onAudioProgress){
         var microphone = audioContext.createMediaStreamSource(stream)
@@ -98,7 +98,7 @@
         var dataUrl = this.$$.videoCanvas.toDataURL(type)
         return dataUrl
       },
-      renderVideoCanvas : function(){
+      fitCanvasSize : function(){
         var video = this.$$.video
         var videoAspect = video.clientHeight / video.clientWidth 
         var ctxWidth = 320
@@ -106,10 +106,14 @@
         var canvas = this.$$.videoCanvas
         canvas.width = ctxWidth
         canvas.height = ctxHeight
+      },
+      renderVideoCanvas : function(){
+        var video = this.$$.video
+        var canvas = this.$$.videoCanvas
         canvas.getContext("2d").drawImage(
           video,
           0, 0, video.clientWidth, video.clientHeight, 
-          0, 0, ctxWidth , ctxHeight)
+          0, 0, canvas.width , canvas.height)
       },
       capture : function(){
         var oldData = this.captureCurrentVideo()
@@ -163,7 +167,9 @@
     },
     created : function(){
       var self = this
-      navigator.webkitGetUserMedia({ video: true, audio: true}, this.onUserMediaSuccess, error)
+      navigator.webkitGetUserMedia({ video: true, audio: true}, this.onUserMediaSuccess, function(e){
+        console.log(e)
+      })
     }
   })
   vm.$mount("#app")
@@ -171,9 +177,6 @@
   setInterval(function(){
     vm.capture()
     vm.calcSystemValue()
-  }, 1000)
-  function error(err){
-    //console.log("An error occured! " + err);
-  }
+  }, 500)
   </script>
 </html>
